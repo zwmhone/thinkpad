@@ -1,7 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Navbar from "../components/Navbar";
 import RateLimitedUI from "../components/RateLimitedUI";
-import { useEffect } from "react";
 import api from "../lib/axios";
 import toast from "react-hot-toast";
 import NoteCard from "../components/NoteCard";
@@ -16,12 +15,26 @@ const HomePage = () => {
     const fetchNotes = async () => {
       try {
         const res = await api.get("/notes");
-        console.log(res.data);
-        setNotes(res.data);
+        console.log("API response:", res.data);
+
+        let fetchedNotes = [];
+
+        // ✅ Handle both array and object responses
+        if (Array.isArray(res.data)) {
+          fetchedNotes = res.data;
+        } else if (res.data && Array.isArray(res.data.notes)) {
+          fetchedNotes = res.data.notes;
+        } else {
+          console.warn("Unexpected API response:", res.data);
+          toast.error("Invalid notes data received");
+        }
+
+        setNotes(fetchedNotes);
         setIsRateLimited(false);
       } catch (error) {
         console.log("Error fetching notes");
         console.log(error.response);
+
         if (error.response?.status === 429) {
           setIsRateLimited(true);
         } else {
@@ -46,12 +59,16 @@ const HomePage = () => {
           <div className="text-center text-primary py-10">Loading notes...</div>
         )}
 
-        {notes.length === 0 && !isRateLimited && <NotesNotFound />}
+        {!loading && notes.length === 0 && !isRateLimited && <NotesNotFound />}
 
-        {notes.length > 0 && !isRateLimited && (
+        {!loading && notes.length > 0 && !isRateLimited && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {notes.map((note) => (
-              <NoteCard key={note._id} note={note} setNotes={setNotes} />
+              <NoteCard
+                key={note._id || note.id}
+                note={note}
+                setNotes={setNotes}
+              />
             ))}
           </div>
         )}
@@ -59,4 +76,5 @@ const HomePage = () => {
     </div>
   );
 };
+
 export default HomePage;
