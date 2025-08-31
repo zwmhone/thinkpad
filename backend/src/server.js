@@ -15,8 +15,8 @@ const __dirname = path.resolve();
 
 // ✅ CORS for both dev + prod
 const allowedOrigins = [
-  "http://localhost:5173",
-  "https://thinkpad2.vercel.app",
+  "http://localhost:5173", // dev
+  "https://thinkpad2.vercel.app", // prod frontend
 ];
 
 app.use(
